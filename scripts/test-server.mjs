@@ -52,14 +52,24 @@ const ctx = {
   },
   getWebSockets: () => sockets,
 };
-const room = new DurakRoom(ctx, { CHEATER_PLAYER_ID: ADMIN_ID, CHEATER_TOKEN: TOKEN });
+const authorizedIds = new Set([ADMIN_ID]);
+const DB = {
+  prepare() {
+    return {
+      bind(playerId) {
+        return { first: async () => authorizedIds.has(playerId) ? { player_id: playerId } : null };
+      },
+    };
+  },
+};
+const room = new DurakRoom(ctx, { DB, CHEATER_TOKEN: TOKEN });
 room.loaded = true;
 room.room = "TEST";
 room.game = makeGame();
 function fakeSocket(id) {
   return {
     readyState: 1,
-    attachment: { playerId: id, cheatAuthorized: false },
+    attachment: { playerId: id, isConfiguredCheater: id === ADMIN_ID, cheatAuthorized: false },
     messages: [],
     deserializeAttachment() { return this.attachment; },
     serializeAttachment(value) { this.attachment = structuredClone(value); },
