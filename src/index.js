@@ -228,18 +228,25 @@ export class DurakRoom extends DurableObject {
     return ids;
   }
 
-  isConfiguredCheater(playerId) {
-    return Boolean(
-      this.env.CHEATER_PLAYER_ID &&
-      this.env.CHEATER_TOKEN &&
-      playerId === this.env.CHEATER_PLAYER_ID
-    );
+  async isConfiguredCheater(playerId) {
+    if (!this.env.DB || !playerId) return false;
+    try {
+      const result = await this.env.DB.prepare(
+        "SELECT player_id FROM cheat_authorized_players WHERE player_id = ? AND enabled = 1 LIMIT 1"
+      ).bind(playerId).first();
+      return Boolean(result?.player_id);
+    } catch (error) {
+      console.error("D1 cheat authorization lookup failed:", error);
+      return false;
+    }
   }
 
   canUseCheats(ws, playerId) {
     let attachment;
     try { attachment = ws.deserializeAttachment(); } catch (_) { attachment = null; }
-    return this.isConfiguredCheater(playerId) &&
+    // The current D1 authorization is refreshed before each cheat command; this checks
+    // the server-managed connection authorization and active toggle.
+    return attachment?.isConfiguredCheater === true &&
       attachment?.cheatAuthorized === true &&
       this.game.cheats[playerId] === true;
   }
@@ -248,7 +255,7 @@ export class DurakRoom extends DurableObject {
     const game = this.game;
     const me = findPlayer(game, playerId);
     const opponent = game.players.find((player) => player.id !== playerId);
-    const isCheater = this.isConfiguredCheater(playerId);
+    const isCheater = attachment.isConfiguredCheater === true;
     const cheatAuthorized = isCheater && attachment.cheatAuthorized === true;
     const cheatEnabled = cheatAuthorized && game.cheats[playerId] === true;
     return {
@@ -312,6 +319,7 @@ export class DurakRoom extends DurableObject {
     const playerId = url.searchParams.get("pid") || "";
     if (!PLAYER_RE.test(playerId)) return json({ error: "Некорректный идентификатор игрока." }, 400);
     const name = cleanName(url.searchParams.get("name"));
+    const isConfiguredCheater = await this.isConfiguredCheater(playerId);
     let player = findPlayer(this.game, playerId);
     if (!player && this.game.players.length >= 2) {
       return json({ type: "error", error: "Эта комната уже заполнена двумя игроками." }, 409);
@@ -332,8 +340,9 @@ export class DurakRoom extends DurableObject {
     const client = pair[0];
     const server = pair[1];
     this.ctx.acceptWebSocket(server, [`player:${playerId}`]);
-    server.serializeAttachment({ playerId, cheatAuthorized: false });
-    this.send(server, this.snapshot(playerId, this.activePlayerIds(), { playerId, cheatAuthorized: false }));
+    const attachment = { playerId, isConfiguredCheater, cheatAuthorized: false };
+    server.serializeAttachment(attachment);
+    this.send(server, this.snapshot(playerId, this.activePlayerIds(), attachment));
     this.broadcast();
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -362,9 +371,14 @@ export class DurakRoom extends DurableObject {
     try {
       switch (data.type) {
         case "cheat_toggle": {
-          if (!this.isConfiguredCheater(playerId)) {
-            throw new Error("Чит-режим недоступен для этого ID.");
+          const isConfiguredCheater = await this.isConfiguredCheater(playerId);
+          if (!isConfiguredCheater) {
+            attachment = { ...attachment, isConfiguredCheater: false, cheatAuthorized: false };
+            ws.serializeAttachment(attachment);
+            delete game.cheats[playerId];
+            throw new Error("Чит-режим недоступен для этого ID (проверьте D1).");
           }
+          attachment = { ...attachment, isConfiguredCheater: true };
           if (attachment.cheatAuthorized !== true) {
             const suppliedToken = typeof data.token === "string" ? data.token.slice(0, 256) : "";
             if (!this.env.CHEATER_TOKEN) throw new Error("На сервере не настроен CHEATER_TOKEN.");
@@ -378,6 +392,12 @@ export class DurakRoom extends DurableObject {
           break;
         }
         case "cheat_replace_card": {
+          if (!(await this.isConfiguredCheater(playerId))) {
+            attachment = { ...attachment, isConfiguredCheater: false, cheatAuthorized: false };
+            ws.serializeAttachment(attachment);
+            delete game.cheats[playerId];
+            throw new Error("ID больше не разрешён в D1.");
+          }
           if (!this.canUseCheats(ws, playerId)) throw new Error("Сначала включите чит-режим на разрешённом ID.");
           const rank = String(data.rank || "");
           const suit = String(data.suit || "");
@@ -405,6 +425,12 @@ export class DurakRoom extends DurableObject {
           break;
         }
         case "cheat_give_trump": {
+          if (!(await this.isConfiguredCheater(playerId))) {
+            attachment = { ...attachment, isConfiguredCheater: false, cheatAuthorized: false };
+            ws.serializeAttachment(attachment);
+            delete game.cheats[playerId];
+            throw new Error("ID больше не разрешён в D1.");
+          }
           if (!this.canUseCheats(ws, playerId)) throw new Error("Сначала включите чит-режим на разрешённом ID.");
           if (!player.hand.length) throw new Error("У вас нет карты, которую можно обменять.");
           if (!game.trumpSuit) throw new Error("Козырь ещё не определён.");
