@@ -1,0 +1,16 @@
+name = "durak-online-duo"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[durable_objects.bindings]]
+name = "DURAK_ROOMS"
+class_name = "DurakRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DurakRoom"]

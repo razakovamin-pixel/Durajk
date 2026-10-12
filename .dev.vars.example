@@ -1,0 +1,5 @@
+# Copy this file to .dev.vars and replace the example values.
+# CHEATER_PLAYER_ID must exactly match the browser ID shown on the game's entry page.
+CHEATER_PLAYER_ID="paste-your-browser-player-id-here"
+# Use a long random secret; the cheat controls prompt for it once per connection.
+CHEATER_TOKEN="replace-with-a-long-random-secret"

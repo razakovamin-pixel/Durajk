@@ -1,0 +1,15 @@
+{
+  "name": "durak-online-duo",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "check": "node --check src/index.js && node scripts/check-client.mjs",
+    "deploy": "wrangler deploy",
+    "test": "npm run check && node scripts/test-server.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.36.0"
+  }
+}
