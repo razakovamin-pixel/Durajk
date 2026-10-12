@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101714" />
+  <meta name="description" content="Подкидной дурак онлайн для двух игроков. Создайте комнату и пригласите друга." />
+  <title>Дурак на двоих — Night Table</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c110f;
+      --panel: #151d19;
+      --panel-2: #1b2721;
+      --felt: #153a2b;
+      --felt-light: #1e4a36;
+      --line: rgba(225, 240, 229, .13);
+      --text: #f4f5ed;
+      --muted: #9ba99f;
+      --accent: #d8f36a;
+      --accent-ink: #17210c;
+      --red: #d55252;
+      --card: #fbfaf4;
+      --card-ink: #1c231f;
+      --shadow: 0 20px 55px rgba(0, 0, 0, .24);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { min-height: 100dvh; background-image: radial-gradient(ellipse at 50% -10%, rgba(91, 129, 80, .13), transparent 58%); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .app { max-width: 1120px; margin: 0 auto; padding: 22px clamp(12px, 3vw, 28px) 34px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 26px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; user-select: none; border: 0; color: inherit; background: transparent; padding: 0; text-align: left; }
+    .brand-mark { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--accent); background: #223128; font-size: 23px; box-shadow: inset 0 0 0 1px rgba(216,243,106,.13); }
+    .brand-name { font-size: 15px; font-weight: 800; letter-spacing: .13em; }
+    .brand-sub { font-size: 11px; color: var(--muted); letter-spacing: .17em; margin-top: 3px; }
+    .top-note { color: var(--muted); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; white-space: nowrap; }
+    .screen { animation: fadein .25s ease; }
+    @keyframes fadein { from { opacity: .3; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    .entry-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 20px; align-items: stretch; margin-top: clamp(20px, 6vh, 64px); }
+    .hero { border: 1px solid var(--line); background: linear-gradient(145deg, rgba(33, 55, 42, .84), rgba(17, 25, 21, .95)); border-radius: 25px; padding: clamp(25px, 5vw, 52px); min-height: 390px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; box-shadow: var(--shadow); }
+    .hero:after { content: "♠"; position: absolute; color: rgba(216,243,106,.055); font-size: 270px; line-height: 1; right: -12px; bottom: -76px; transform: rotate(-16deg); pointer-events: none; }
+    .eyebrow { color: var(--accent); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; font-weight: 800; }
+    h1 { font-size: clamp(38px, 6vw, 68px); line-height: .99; letter-spacing: -.055em; margin: 20px 0 18px; max-width: 560px; position: relative; z-index: 1; }
+    h1 span { color: var(--accent); }
+    .hero-copy { color: #b8c4ba; line-height: 1.65; max-width: 440px; font-size: 14px; position: relative; z-index: 1; }
+    .hero-foot { display: flex; align-items: center; gap: 10px; margin-top: 28px; color: var(--muted); font-size: 12px; position: relative; z-index: 1; }
+    .online-dot { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px rgba(216,243,106,.3); }
+    .form-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 25px; padding: clamp(22px, 4vw, 35px); display: flex; flex-direction: column; justify-content: center; box-shadow: var(--shadow); }
+    .panel-title { font-size: 20px; font-weight: 750; margin: 0 0 7px; letter-spacing: -.025em; }
+    .panel-copy { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0 0 25px; }
+    .field-label { display: block; color: #b6c2b8; font-size: 12px; font-weight: 650; margin: 0 0 8px; }
+    .field { margin-bottom: 17px; }
+    input { width: 100%; min-height: 47px; border: 1px solid var(--line); border-radius: 12px; background: #0f1612; color: var(--text); padding: 0 14px; outline: 0; }
+    input::placeholder { color: #65746a; }
+    input:focus { border-color: rgba(216,243,106,.65); }
+    .btn { min-height: 46px; border: 1px solid transparent; border-radius: 12px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-size: 13px; font-weight: 800; transition: transform .15s, background .15s, border-color .15s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--accent); color: var(--accent-ink); }
+    .btn-primary:hover { background: #e4ff79; }
+    .btn-secondary { color: var(--text); background: #222e27; border-color: var(--line); }
+    .btn-secondary:hover { background: #29372f; }
+    .btn-quiet { color: #c4d0c6; background: transparent; border-color: var(--line); }
+    .btn-danger { color: #ffe2df; background: rgba(147, 44, 44, .22); border-color: rgba(213,82,82,.28); }
+    .form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .privacy-note { margin: 20px 0 0; color: #78877c; font-size: 11px; line-height: 1.55; }
+    .player-id-box { margin-top: 15px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #101712; }
+    .player-id-row { display: flex; align-items: center; gap: 8px; }
+    .player-id-value { min-width: 0; flex: 1; color: #b7c6b9; font-size: 10px; overflow-wrap: anywhere; }
+    .player-id-box .btn { min-height: 34px; padding: 0 10px; font-size: 10px; flex: 0 0 auto; }
+    .cheat-panel { margin-top: 13px; padding: 14px; border: 1px dashed rgba(216,243,106,.38); border-radius: 14px; background: rgba(216,243,106,.045); }
+    .cheat-panel[hidden] { display: none !important; }
+    .cheat-panel-title { font-size: 12px; font-weight: 900; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+    .cheat-panel-copy { margin: 7px 0 12px; color: #a3b1a6; font-size: 11px; line-height: 1.55; }
+    .cheat-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .cheat-field label { display: block; color: #b9c7bc; font-size: 10px; margin-bottom: 6px; }
+    .cheat-field select { width: 100%; min-height: 42px; padding: 0 9px; border-radius: 9px; border: 1px solid var(--line); background: #0f1612; color: var(--text); }
+    .cheat-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .cheat-actions .btn { flex: 1 1 160px; }
+    .cheat-warning { margin: 10px 0 0; color: #839184; font-size: 10px; line-height: 1.5; }
+    .game-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+    .room-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .room-chip { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--line); background: var(--panel); border-radius: 11px; padding: 9px 12px; color: #c4cec6; font-size: 12px; }
+    .room-code { font-weight: 850; letter-spacing: .16em; color: var(--accent); }
+    .status { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .board { position: relative; border: 1px solid rgba(221, 242, 226, .16); border-radius: 24px; padding: 16px; min-height: 460px; background: radial-gradient(ellipse at center, var(--felt-light), var(--felt) 68%, #102b20); box-shadow: var(--shadow); overflow: hidden; }
+    .board:before { content: ""; position: absolute; inset: 12px; border: 1px solid rgba(233, 255, 236, .09); border-radius: 18px; pointer-events: none; }
+    .player-zone { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 70px; }
+    .player-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .avatar { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: rgba(7,22,15,.44); border: 1px solid rgba(255,255,255,.14); color: #e4efd7; font-weight: 850; }
+    .player-name { font-weight: 800; font-size: 13px; max-width: 180px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .player-role { color: #c4d7c8; font-size: 11px; margin-top: 4px; }
+    .player-status { display: flex; align-items: center; gap: 6px; color: #b9d0bf; font-size: 11px; }
+    .back-stack { display: flex; padding-left: 7px; min-width: 53px; justify-content: flex-end; }
+    .card-back { width: 30px; height: 43px; margin-left: -7px; border-radius: 5px; background: repeating-linear-gradient(45deg, #263d30, #263d30 4px, #314e3c 4px, #314e3c 7px); border: 1px solid rgba(245,255,245,.6); box-shadow: 0 3px 7px rgba(0,0,0,.18); }
+    .opponent-reveal { margin: 4px 0 8px; display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; min-height: 0; position: relative; z-index: 1; }
+    .reveal-label { flex-basis: 100%; text-align: center; font-size: 10px; font-weight: 900; letter-spacing: .13em; color: var(--accent); text-transform: uppercase; }
+    .table-zone { position: relative; z-index: 1; min-height: 200px; padding: 10px 4px; display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: center; gap: 16px; }
+    .table-pair { display: flex; gap: 5px; align-items: flex-start; padding: 5px; border: 1px solid transparent; border-radius: 10px; background: rgba(4, 20, 12, .1); }
+    .table-pair.selected { border-color: var(--accent); background: rgba(216,243,106,.08); }
+    .table-card-wrap { text-align: center; }
+    .tiny-label { color: #b5cdbb; font-size: 9px; margin-top: 5px; letter-spacing: .05em; }
+    .playing-card { width: 57px; height: 82px; border: 0; border-radius: 8px; padding: 5px 6px; background: var(--card); color: var(--card-ink); box-shadow: 0 5px 12px rgba(0,0,0,.23); display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; text-align: left; position: relative; transition: transform .15s, box-shadow .15s; flex: 0 0 auto; }
+    .playing-card .rank { font-size: 16px; font-weight: 900; line-height: 1; }
+    .playing-card .suit { font-size: 17px; line-height: 1; align-self: flex-end; }
+    .playing-card.red { color: #c63743; }
+    .playing-card.black { color: #202722; }
+    .playing-card .big-suit { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-42%); text-align: center; opacity: .12; font-size: 34px; pointer-events: none; }
+    .playing-card:disabled { cursor: default; }
+    .hand-card { width: 66px; height: 94px; margin-right: -2px; cursor: pointer; }
+    .hand-card:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 10px 19px rgba(0,0,0,.3); z-index: 2; }
+    .hand-card:disabled { opacity: .48; }
+    .empty-table { color: rgba(235, 249, 237, .57); font-size: 13px; text-align: center; line-height: 1.7; max-width: 265px; }
+    .empty-symbol { color: rgba(216,243,106,.65); font-size: 24px; display: block; margin-bottom: 5px; }
+    .board-footer { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 2px 0; border-top: 1px solid rgba(255,255,255,.09); }
+    .deck-info { display: flex; align-items: center; gap: 9px; color: #d8e6dc; font-size: 11px; }
+    .trump-card { width: 33px; height: 47px; border-radius: 5px; background: #f8f7f0; border: 1px solid white; display: flex; align-items: center; justify-content: center; font-size: 19px; position: relative; color: #18231b; box-shadow: 0 3px 7px rgba(0,0,0,.18); }
+    .trump-card.red { color: #c63743; }
+    .trump-card:after { content: ""; position: absolute; inset: 3px; border: 1px solid rgba(0,0,0,.13); border-radius: 2px; }
+    .own-area { margin-top: 17px; border: 1px solid var(--line); background: var(--panel); border-radius: 20px; padding: 17px; }
+    .own-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+    .own-title { font-size: 12px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .card-count { color: var(--muted); font-size: 11px; }
+    .hand { min-height: 105px; display: flex; align-items: flex-end; justify-content: center; gap: clamp(2px, 1vw, 9px); overflow-x: auto; padding: 8px 4px 12px; }
+    .action-row { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; margin-top: 11px; }
+    .action-row .btn { min-width: 130px; }
+    .footer-note { text-align: center; margin: 16px 0 0; font-size: 10px; color: #6d7a70; line-height: 1.5; }
+    #cheatButton { display: none; }
+    #cheatButton.visible { display: inline-flex; }
+    .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 30; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; max-width: min(90vw, 500px); padding: 12px 16px; background: #e7f4cd; color: #1a2619; border-radius: 12px; box-shadow: var(--shadow); font-size: 12px; font-weight: 750; transition: opacity .18s, transform .18s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .winner-banner { display: none; position: relative; z-index: 2; background: rgba(10,17,12,.8); border: 1px solid rgba(216,243,106,.28); border-radius: 14px; padding: 12px 14px; margin: 6px 0 12px; text-align: center; color: var(--accent); font-size: 13px; font-weight: 850; }
+    .winner-banner.visible { display: block; }
+    .mobile-hidden { display: inline-flex; }
+    @media (max-width: 760px) {
+      .app { padding-top: 15px; }
+      header { margin-bottom: 18px; }
+      .top-note { display: none; }
+      .entry-grid { grid-template-columns: 1fr; margin-top: 8px; }
+      .hero { min-height: auto; padding: 27px; }
+      .hero h1 { font-size: clamp(40px, 12vw, 60px); }
+      .hero:after { font-size: 200px; right: 0; bottom: -45px; }
+      .hero-foot { margin-top: 24px; }
+      .form-panel { padding: 24px; }
+      .cheat-controls { grid-template-columns: 1fr; }
+      .player-id-row { align-items: stretch; flex-direction: column; }
+      .player-id-box .btn { width: 100%; }
+      .board { padding: 11px; min-height: 405px; border-radius: 18px; }
+      .board:before { inset: 7px; }
+      .table-zone { min-height: 155px; gap: 7px; }
+      .playing-card { width: 48px; height: 70px; border-radius: 7px; }
+      .playing-card .rank { font-size: 14px; }
+      .playing-card .suit { font-size: 15px; }
+      .playing-card .big-suit { font-size: 27px; }
+      .hand-card { width: 53px; height: 77px; margin-right: -4px; }
+      .hand { justify-content: flex-start; min-height: 90px; }
+      .table-pair { gap: 3px; padding: 3px; }
+      .tiny-label { font-size: 8px; }
+      .player-name { max-width: 135px; }
+      .own-area { padding: 13px 9px; }
+      .action-row .btn { flex: 1 1 130px; min-width: 0; }
+      .room-meta { gap: 6px; }
+      .room-chip { padding: 8px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <button class="brand" id="brandButton" aria-label="Night Table — несколько нажатий открывают скрытую кнопку для разрешённого ID">
+        <span class="brand-mark">♠</span>
+        <span><span class="brand-name">NIGHT TABLE</span><span class="brand-sub" style="display:block">ДУРАК · 1 × 1</span></span>
+      </button>
+      <div class="top-note"><span class="online-dot"></span>&nbsp; Только вы и ваш соперник</div>
+    </header>
+
+    <main>
+      <section id="entryScreen" class="screen">
+        <div class="entry-grid">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">Классика · Подкидной</div>
+              <h1>Карты на стол.<br><span>Без лишних слов.</span></h1>
+              <p class="hero-copy">Создайте приватную комнату, отправьте другу ссылку и сыграйте партию в подкидного дурака. Никаких регистраций — только две колоды нервов и одна победа.</p>
+            </div>
+            <div class="hero-foot"><span class="online-dot"></span> Игра синхронизируется в реальном времени</div>
+          </div>
+          <div class="form-panel">
+            <h2 class="panel-title">Зайти за стол</h2>
+            <p class="panel-copy">Введите имя и создайте комнату или подключитесь по коду друга.</p>
+            <form id="joinForm">
+              <div class="field">
+                <label class="field-label" for="playerName">Ваше имя</label>
+                <input id="playerName" maxlength="20" autocomplete="nickname" placeholder="Например, Карточный волк" required />
+              </div>
+              <div class="field">
+                <label class="field-label" for="roomCode">Код комнаты <span style="font-weight:400;color:#77867b">(если есть)</span></label>
+                <input id="roomCode" maxlength="8" autocapitalize="characters" placeholder="Например, K7P2" autocomplete="off" />
+              </div>
+              <div class="form-actions">
+                <button type="button" id="createButton" class="btn btn-primary">✦ Создать стол</button>
+                <button type="submit" class="btn btn-secondary">Войти по коду ↗</button>
+              </div>
+            </form>
+            <p class="privacy-note">Комната рассчитана ровно на двух игроков. Не делитесь ссылкой с посторонними — здесь нет публичного списка комнат.</p>
+            <div class="player-id-box">
+              <div class="field-label">ID этого браузера — нужен для назначения единственного читера</div>
+              <div class="player-id-row">
+                <code id="playerIdLabel" class="player-id-value"></code>
+                <button type="button" id="copyPlayerIdButton" class="btn btn-quiet">Копировать ID</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="screen" hidden>
+        <div class="game-top">
+          <div class="room-meta">
+            <div class="room-chip">КОМНАТА <span id="roomCodeLabel" class="room-code">------</span></div>
+            <button type="button" id="copyInviteButton" class="btn btn-quiet" style="min-height:35px;padding:0 11px;font-size:11px">↗ Пригласить друга</button>
+          </div>
+          <div class="room-meta">
+            <span id="connectionStatus" class="status">Подключаемся…</span>
+            <button type="button" id="leaveButton" class="btn btn-quiet" style="min-height:35px;padding:0 11px;font-size:11px">Выйти</button>
+          </div>
+        </div>
+
+        <div id="winnerBanner" class="winner-banner"></div>
+        <div class="board">
+          <div class="player-zone">
+            <div class="player-id">
+              <div id="opponentAvatar" class="avatar">?</div>
+              <div>
+                <div id="opponentName" class="player-name">Ожидание соперника</div>
+                <div id="opponentRole" class="player-role">Подключите второго игрока</div>
+              </div>
+            </div>
+            <div id="opponentBackStack" class="back-stack" aria-label="Карты соперника"></div>
+          </div>
+
+          <div id="opponentReveal" class="opponent-reveal" aria-live="polite"></div>
+          <div id="tableZone" class="table-zone">
+            <div class="empty-table"><span class="empty-symbol">♣</span>Стол ждёт первого хода.<br>Когда соперник подключится, карты появятся здесь.</div>
+          </div>
+
+          <div class="board-footer">
+            <div class="deck-info">
+              <div id="trumpCard" class="trump-card">♠</div>
+              <div><div id="deckCount">36 карт в колоде</div><div id="trumpLabel" style="color:#a9c8b2;margin-top:3px">Козырь определяется в начале</div></div>
+            </div>
+            <div id="tableStatus" class="status" style="text-align:right">Ожидание игроков</div>
+          </div>
+        </div>
+
+        <section class="own-area">
+          <div class="own-heading">
+            <div class="own-title">Ваши карты</div>
+            <div id="ownCount" class="card-count">0 карт</div>
+          </div>
+          <div id="handZone" class="hand"></div>
+          <div class="action-row">
+            <button type="button" id="takeButton" class="btn btn-danger" hidden>↘ Забрать карты</button>
+            <button type="button" id="beatButton" class="btn btn-primary" hidden>✓ Бито</button>
+            <button type="button" id="cheatButton" class="btn btn-secondary">♠ Ничего подозрительного</button>
+            <button type="button" id="restartButton" class="btn btn-secondary" hidden>↻ Новая партия</button>
+          </div>
+          <div id="cheatPanel" class="cheat-panel" hidden>
+            <div class="cheat-panel-title">Секретная панель</div>
+            <p class="cheat-panel-copy">Заменяйте свои карты картами из колоды или руки соперника. Одна и та же карта не может существовать дважды.</p>
+            <div class="cheat-controls">
+              <div class="cheat-field">
+                <label for="cheatOwnCard">Вашу карту обменять</label>
+                <select id="cheatOwnCard"></select>
+              </div>
+              <div class="cheat-field">
+                <label for="cheatRank">Получить ранг</label>
+                <select id="cheatRank">
+                  <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>J</option><option>Q</option><option>K</option><option>A</option>
+                </select>
+              </div>
+              <div class="cheat-field">
+                <label for="cheatSuit">Получить масть</label>
+                <select id="cheatSuit">
+                  <option value="S">♠ Пики</option><option value="H">♥ Черви</option><option value="D">♦ Бубны</option><option value="C">♣ Трефы</option>
+                </select>
+              </div>
+            </div>
+            <div class="cheat-actions">
+              <button type="button" id="cheatReplaceButton" class="btn btn-secondary">⇄ Заменить карту</button>
+              <button type="button" id="cheatTrumpButton" class="btn btn-primary">♛ Выдать козырь</button>
+            </div>
+            <p class="cheat-warning">Читы обрабатывает сервер. Доступ есть только у ID из CHEATER_PLAYER_ID и при правильном CHEATER_TOKEN.</p>
+          </div>
+        </section>
+        <p class="footer-note">Подкидной дурак · 36 карт · Состояние партии хранится на стороне сервера комнаты.</p>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const suitGlyph = { S: '♠', H: '♥', D: '♦', C: '♣' };
+      const suitName = { S: 'пики', H: 'черви', D: 'бубны', C: 'трефы' };
+      const state = { ws: null, game: null, shouldReconnect: false, reconnectTimer: null, selectedTableId: null, toastTimer: null, tapCount: 0, tapTimer: null, connecting: false };
+      const storedName = localStorage.getItem('durakName');
+      if (storedName) $('playerName').value = storedName;
+      $('playerIdLabel').textContent = playerId();
+      const queryRoom = new URL(location.href).searchParams.get('room');
+      if (queryRoom) $('roomCode').value = queryRoom.toUpperCase().slice(0, 8);
+
+      function toast(message) {
+        const el = $('toast');
+        el.textContent = message;
+        el.classList.add('show');
+        clearTimeout(state.toastTimer);
+        state.toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+      }
+      function randomRoom() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let value = '';
+        for (let i = 0; i < 5; i++) value += chars[Math.floor(Math.random() * chars.length)];
+        return value;
+      }
+      function playerId() {
+        let value = localStorage.getItem('durakPlayerId');
+        if (!value) {
+          value = (crypto.randomUUID ? crypto.randomUUID() : 'p-' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+          localStorage.setItem('durakPlayerId', value);
+        }
+        return value;
+      }
+      function safeText(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+      }
+      function createCardElement(card, extraClass = '', clickable = false, disabled = false) {
+        const color = (card.suit === 'H' || card.suit === 'D') ? 'red' : 'black';
+        const element = document.createElement(clickable ? 'button' : 'div');
+        element.className = `playing-card ${color} ${extraClass}`.trim();
+        if (clickable) {
+          element.type = 'button';
+          element.disabled = disabled;
+          element.setAttribute('aria-label', `${card.rank} ${suitName[card.suit]}`);
+        }
+        element.innerHTML = `<span class="rank">${safeText(card.rank)}</span><span class="big-suit">${suitGlyph[card.suit]}</span><span class="suit">${suitGlyph[card.suit]}</span>`;
+        return element;
+      }
+      function send(payload) {
+        if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+          toast('Нет соединения с комнатой. Попробуйте переподключиться.');
+          return;
+        }
+        state.ws.send(JSON.stringify(payload));
+      }
+      function connect(room) {
+        if (state.connecting) return;
+        state.connecting = true;
+        state.shouldReconnect = true;
+        const name = $('playerName').value.trim().slice(0, 20) || 'Игрок';
+        localStorage.setItem('durakName', name);
+        const normalizedRoom = room.toUpperCase().trim();
+        if (!/^[A-Z0-9]{4,8}$/.test(normalizedRoom)) {
+          state.connecting = false;
+          toast('Код комнаты: 4–8 латинских букв или цифр.');
+          return;
+        }
+        $('roomCode').value = normalizedRoom;
+        $('entryScreen').hidden = true;
+        $('gameScreen').hidden = false;
+        $('roomCodeLabel').textContent = normalizedRoom;
+        $('connectionStatus').textContent = 'Подключаемся…';
+        const currentUrl = new URL(location.href);
+        currentUrl.searchParams.set('room', normalizedRoom);
+        history.replaceState(null, '', currentUrl.pathname + currentUrl.search);
+        if (state.ws) {
+          state.ws.onclose = null;
+          try { state.ws.close(); } catch (_) {}
+        }
+        const wsUrl = new URL('/ws', location.href);
+        wsUrl.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl.searchParams.set('room', normalizedRoom);
+        wsUrl.searchParams.set('name', name);
+        wsUrl.searchParams.set('pid', playerId());
+        const ws = new WebSocket(wsUrl);
+        state.ws = ws;
+        ws.onopen = () => {
+          state.connecting = false;
+          $('connectionStatus').textContent = 'Соединение установлено';
+        };
+        ws.onmessage = (event) => {
+          let message;
+          try { message = JSON.parse(event.data); } catch (_) { return; }
+          if (message.type === 'state') {
+            state.game = message;
+            if (!message.table.some((item) => item.id === state.selectedTableId && !item.defense)) state.selectedTableId = null;
+            render();
+          } else if (message.type === 'error') {
+            toast(message.error || 'Ошибка игры.');
+          }
+        };
+        ws.onerror = () => {
+          $('connectionStatus').textContent = 'Ошибка соединения';
+          state.connecting = false;
+        };
+        ws.onclose = () => {
+          state.connecting = false;
+          $('connectionStatus').textContent = 'Соединение потеряно';
+          if (state.shouldReconnect && !state.reconnectTimer) {
+            state.reconnectTimer = setTimeout(() => {
+              state.reconnectTimer = null;
+              if (state.shouldReconnect && state.game) connect(state.game.room);
+            }, 1600);
+          }
+        };
+      }
+      function me() { return state.game?.players.find((p) => p.id === state.game.myId); }
+      function opponent() { return state.game?.players.find((p) => p.id !== state.game.myId); }
+      function isMyTurn() { return state.game && (state.game.attackerId === state.game.myId || state.game.defenderId === state.game.myId); }
+      function render() {
+        const g = state.game;
+        if (!g) return;
+        const self = me();
+        const other = opponent();
+        const started = g.started;
+        const amAttacker = g.attackerId === g.myId;
+        const amDefender = g.defenderId === g.myId;
+        $('roomCodeLabel').textContent = g.room;
+        $('connectionStatus').innerHTML = `<span class="online-dot"></span> На связи`;
+        $('opponentName').textContent = other ? other.name : 'Ожидание соперника';
+        $('opponentAvatar').textContent = other ? (other.name.trim()[0] || '?').toUpperCase() : '?';
+        $('opponentRole').textContent = !other ? 'Отправьте другу приглашение' : !started ? (other.online ? 'Соперник зашёл · готовимся' : 'Соперник не в сети') : g.gameOver ? (g.draw ? 'Ничья' : g.winnerId === other.id ? 'Победитель партии' : 'Партия завершена') : g.attackerId === other.id ? 'Атакует' : 'Отбивается';
+        $('opponentBackStack').innerHTML = '';
+        const backCount = other ? Math.min(other.handCount, 5) : 0;
+        for (let i = 0; i < backCount; i++) {
+          const back = document.createElement('div'); back.className = 'card-back'; $('opponentBackStack').appendChild(back);
+        }
+        $('opponentReveal').innerHTML = '';
+        if (g.cheatEnabled && Array.isArray(g.opponentHand)) {
+          const title = document.createElement('div'); title.className = 'reveal-label'; title.textContent = 'Скрытый режим · карты соперника'; $('opponentReveal').appendChild(title);
+          for (const card of g.opponentHand) $('opponentReveal').appendChild(createCardElement(card));
+        }
+
+        $('tableZone').innerHTML = '';
+        if (g.table.length) {
+          for (const item of g.table) {
+            const pair = document.createElement('div');
+            pair.className = 'table-pair' + (state.selectedTableId === item.id ? ' selected' : '');
+            const attackWrap = document.createElement('div'); attackWrap.className = 'table-card-wrap';
+            const attackCard = createCardElement(item.attack, '', amDefender && !item.defense, false);
+            if (amDefender && !item.defense) {
+              attackCard.title = 'Выбрать карту для отбивания';
+              attackCard.addEventListener('click', () => { state.selectedTableId = item.id; render(); });
+            }
+            attackWrap.appendChild(attackCard);
+            const attackLabel = document.createElement('div'); attackLabel.className = 'tiny-label'; attackLabel.textContent = 'Атака'; attackWrap.appendChild(attackLabel);
+            pair.appendChild(attackWrap);
+            const defenseWrap = document.createElement('div'); defenseWrap.className = 'table-card-wrap';
+            if (item.defense) {
+              defenseWrap.appendChild(createCardElement(item.defense));
+              const label = document.createElement('div'); label.className = 'tiny-label'; label.textContent = 'Отбито'; defenseWrap.appendChild(label);
+            } else {
+              const placeholder = document.createElement('div'); placeholder.className = 'card-back'; placeholder.style.width = '48px'; placeholder.style.height = '70px'; placeholder.style.margin = '0'; placeholder.style.opacity = '.34'; defenseWrap.appendChild(placeholder);
+              const label = document.createElement('div'); label.className = 'tiny-label'; label.textContent = 'Ждёт'; defenseWrap.appendChild(label);
+            }
+            pair.appendChild(defenseWrap);
+            $('tableZone').appendChild(pair);
+          }
+        } else {
+          const empty = document.createElement('div'); empty.className = 'empty-table';
+          empty.innerHTML = started && !g.gameOver ? '<span class="empty-symbol">♠</span>Стол чистый.<br>Первый ход — за атакующим.' : '<span class="empty-symbol">♣</span>Стол ждёт первого хода.<br>Когда соперник подключится, карты появятся здесь.';
+          $('tableZone').appendChild(empty);
+        }
+
+        const trump = g.trumpCard;
+        $('trumpCard').textContent = trump ? suitGlyph[trump.suit] : (g.trumpSuit ? suitGlyph[g.trumpSuit] : '—');
+        $('trumpCard').className = 'trump-card' + (g.trumpSuit === 'H' || g.trumpSuit === 'D' ? ' red' : '');
+        $('deckCount').textContent = `${g.deckCount} ${pluralCards(g.deckCount)} в колоде`;
+        $('trumpLabel').textContent = g.trumpSuit ? `Козырь: ${suitName[g.trumpSuit]}` : 'Козырь определяется в начале';
+
+        $('handZone').innerHTML = '';
+        const hand = [...(g.hand || [])].sort((a, b) => a.value - b.value || SUIT_ORDER(a.suit) - SUIT_ORDER(b.suit));
+        for (const card of hand) {
+          const canAttack = started && !g.gameOver && amAttacker && ['attack', 'throw'].includes(g.phase) && g.table.length < g.attackLimit;
+          const pending = g.table.find((item) => item.id === state.selectedTableId && !item.defense) || g.table.find((item) => !item.defense);
+          const canDefend = started && !g.gameOver && amDefender && g.phase === 'defend' && !!pending;
+          const cardButton = createCardElement(card, 'hand-card', true, !(canAttack || canDefend));
+          cardButton.addEventListener('click', () => {
+            if (canAttack) send({ type: 'attack', cardId: card.id });
+            else if (canDefend) send({ type: 'defend', cardId: card.id, tableId: pending.id });
+          });
+          $('handZone').appendChild(cardButton);
+        }
+        $('ownCount').textContent = `${g.hand.length} ${pluralCards(g.hand.length)}`;
+
+        const pendingCount = g.table.filter((item) => !item.defense).length;
+        let status = 'Ожидание игроков';
+        if (!started) status = 'Ждём второго игрока';
+        else if (g.gameOver) status = g.draw ? 'Ничья' : (g.winnerId === g.myId ? 'Вы победили' : 'Вы проиграли');
+        else if (amAttacker && g.phase === 'attack') status = 'Ваш ход · атакуйте';
+        else if (amAttacker && g.phase === 'throw') status = g.table.length < g.attackLimit ? 'Ваш ход · подкиньте или нажмите «Бито»' : 'Ваш ход · завершите атаку';
+        else if (amDefender && g.phase === 'defend') status = 'Ваш ход · отбивайтесь или заберите';
+        else if (amDefender && g.phase === 'throw') status = 'Все карты отбиты · ждите решения атакующего';
+        else status = 'Ход соперника';
+        $('tableStatus').textContent = status;
+
+        $('takeButton').hidden = !(started && !g.gameOver && amDefender && ['defend', 'throw'].includes(g.phase) && g.table.length > 0);
+        $('beatButton').hidden = !(started && !g.gameOver && amAttacker && g.phase === 'throw' && g.table.length > 0 && g.table.every((item) => item.defense));
+        $('cheatButton').classList.toggle('visible', !!g.canCheat && state.cheatUnlocked === true);
+        $('cheatButton').textContent = g.cheatEnabled ? '♠ Выключить скрытый режим' : '♠ Включить скрытый режим';
+        $('cheatPanel').hidden = !g.cheatEnabled;
+        const ownCardSelect = $('cheatOwnCard');
+        const previousOwnCardId = ownCardSelect.value;
+        ownCardSelect.replaceChildren();
+        for (const card of hand) {
+          const option = document.createElement('option');
+          option.value = card.id;
+          option.textContent = `${card.rank} ${suitGlyph[card.suit]}`;
+          ownCardSelect.appendChild(option);
+        }
+        if (hand.some((card) => card.id === previousOwnCardId)) ownCardSelect.value = previousOwnCardId;
+        $('restartButton').hidden = !(g.isHost && g.gameOver && g.players.length === 2);
+
+        const banner = $('winnerBanner');
+        if (!started) {
+          banner.textContent = 'Стол создан. Отправьте другу приглашение — партия начнётся автоматически.';
+          banner.classList.add('visible');
+        } else if (g.gameOver) {
+          banner.textContent = g.draw ? 'Ничья! У обоих закончились карты.' : (g.winnerId === g.myId ? 'Победа! Соперник остался с картами.' : `${other?.name || 'Соперник'} победил в этой партии.`);
+          banner.classList.add('visible');
+        } else {
+          banner.classList.remove('visible');
+        }
+      }
+      function SUIT_ORDER(suit) { return ({ S: 0, H: 1, D: 2, C: 3 })[suit] ?? 4; }
+      function pluralCards(n) {
+        const x = Math.abs(n) % 100, last = x % 10;
+        if (x > 10 && x < 20) return 'карт';
+        if (last > 1 && last < 5) return 'карты';
+        if (last === 1) return 'карта';
+        return 'карт';
+      }
+
+      $('createButton').addEventListener('click', () => connect(randomRoom()));
+      $('joinForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const room = $('roomCode').value.toUpperCase().trim();
+        if (!room) { toast('Впишите код комнаты или нажмите «Создать стол».'); return; }
+        connect(room);
+      });
+      $('takeButton').addEventListener('click', () => send({ type: 'take' }));
+      $('beatButton').addEventListener('click', () => send({ type: 'beat' }));
+      $('restartButton').addEventListener('click', () => send({ type: 'restart' }));
+      $('cheatButton').addEventListener('click', () => {
+        if (!state.game?.cheatAuthorized) {
+          const token = prompt('Введите CHEATER_TOKEN, заданный в настройках Cloudflare:');
+          if (!token) return;
+          send({ type: 'cheat_toggle', token });
+        } else {
+          send({ type: 'cheat_toggle' });
+        }
+      });
+      $('cheatReplaceButton').addEventListener('click', () => {
+        send({
+          type: 'cheat_replace_card',
+          ownCardId: $('cheatOwnCard').value,
+          rank: $('cheatRank').value,
+          suit: $('cheatSuit').value,
+        });
+      });
+      $('cheatTrumpButton').addEventListener('click', () => {
+        send({ type: 'cheat_give_trump', ownCardId: $('cheatOwnCard').value });
+      });
+      $('copyPlayerIdButton').addEventListener('click', async () => {
+        const id = playerId();
+        try { await navigator.clipboard.writeText(id); toast('ID скопирован.'); }
+        catch (_) { prompt('Скопируйте ваш ID:', id); }
+      });
+      $('copyInviteButton').addEventListener('click', async () => {
+        const link = location.href;
+        try { await navigator.clipboard.writeText(link); toast('Ссылка на комнату скопирована.'); }
+        catch (_) { prompt('Скопируйте ссылку для друга:', link); }
+      });
+      $('leaveButton').addEventListener('click', () => {
+        state.shouldReconnect = false;
+        clearTimeout(state.reconnectTimer);
+        state.reconnectTimer = null;
+        if (state.ws) { state.ws.onclose = null; try { state.ws.close(); } catch (_) {} }
+        state.ws = null; state.game = null; state.connecting = false;
+        $('gameScreen').hidden = true; $('entryScreen').hidden = false;
+        const url = new URL(location.href); url.searchParams.delete('room'); history.replaceState(null, '', url.pathname + url.search);
+      });
+      $('brandButton').addEventListener('click', () => {
+        if (!state.game?.canCheat) return;
+        state.tapCount++;
+        clearTimeout(state.tapTimer);
+        state.tapTimer = setTimeout(() => { state.tapCount = 0; }, 2200);
+        if (state.tapCount >= 5) {
+          state.cheatUnlocked = true;
+          state.tapCount = 0;
+          render();
+          toast('Секретная кнопка открыта. Только на вашем экране.');
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'k' && state.game?.canCheat) {
+          state.cheatUnlocked = true;
+          render();
+          toast('Секретная кнопка открыта.');
+        }
+      });
+      window.addEventListener('online', () => {
+        if (state.shouldReconnect && state.game && (!state.ws || state.ws.readyState > WebSocket.OPEN)) connect(state.game.room);
+      });
+    })();
+  </script>
+</body>
+</html>
